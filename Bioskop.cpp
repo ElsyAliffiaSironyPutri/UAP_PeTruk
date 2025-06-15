@@ -199,3 +199,119 @@ void clearInput() {
     cin.clear();
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
 }
+
+string toLower(string s) {
+    transform(s.begin(), s.end(), s.begin(), ::tolower);
+    return s;
+}
+
+void login(Bioskop& bio, User*& currentUser) {
+    cout << "=== LOGIN ===\n";
+    string username, password;
+    cout << "Username: "; cin >> username;
+    cout << "Password: "; cin >> password;
+
+    User* u = bio.findUser(username);
+    if (u && u->checkPassword(password)) {
+        cout << "Login berhasil, selamat datang " << username << "!\n";
+        currentUser = u;
+    } else {
+        cout << "Username atau password salah!\n";
+    }
+}
+
+void registerUser(Bioskop& bio) {
+    cout << "=== REGISTER ===\n";
+    string username, password, passConfirm;
+    cout << "Username: "; cin >> username;
+
+    if (bio.findUser(username)) {
+        cout << "Username sudah digunakan.\n";
+        return;
+    }
+
+    cout << "Password: "; cin >> password;
+    cout << "Konfirmasi Password: "; cin >> passConfirm;
+
+    if (password != passConfirm) {
+        cout << "Password tidak cocok.\n";
+        return;
+    }
+
+    bio.addUser(username, password);
+    cout << "Registrasi berhasil, silahkan login.\n";
+}
+
+void bookingMenu(Bioskop& bio, User* currentUser) {
+    cout << "=== Booking Tempat Duduk ===\n";
+    bio.showSessions();
+
+    int sesi;
+    cout << "Pilih sesi (1-3): ";
+    cin >> sesi;
+    if (sesi < 1 || sesi > 3) {
+        cout << "Sesi tidak valid!\n";
+        return;
+    }
+
+    bio.showSeats(sesi);
+
+    cout << "Masukkan kode kursi (misal A1): ";
+    string seat;
+    cin >> seat;
+
+    if (!bio.validSeat(seat)) {
+        cout << "Kode kursi tidak valid!\n";
+        return;
+    }
+
+    if (!bio.seatAvailable(sesi, seat)) {
+        cout << "Kursi sudah dipesan!\n";
+        return;
+    }
+
+    if (currentUser->hasBooked(seat, sesi)) {
+        cout << "Kamu sudah booking kursi ini di sesi ini!\n";
+        return;
+    }
+
+    bool booked = bio.bookSeat(sesi, seat);
+    if (booked) {
+        currentUser->addBooking(seat, sesi);
+        cout << "Booking berhasil untuk kursi " << seat << " di sesi " << sesi << ".\n";
+    } else {
+        cout << "Booking gagal.\n";
+    }
+}
+
+void cancelBookingMenu(Bioskop& bio, User* currentUser) {
+    cout << "=== Batal Booking ===\n";
+    currentUser->showBookings();
+
+    cout << "Masukkan kode kursi yang ingin dibatalkan (misal A1): ";
+    string seat;
+    cin >> seat;
+
+    cout << "Masukkan sesi kursi yang ingin dibatalkan: ";
+    int sesi;
+    cin >> sesi;
+
+    if (!bio.validSeat(seat)) {
+        cout << "Kode kursi tidak valid!\n";
+        return;
+    }
+
+    if (!currentUser->hasBooked(seat, sesi)) {
+        cout << "Kamu belum booking kursi ini di sesi ini.\n";
+        return;
+    }
+
+    bool cancelSeatSuccess = bio.cancelSeat(sesi, seat);
+    bool cancelBookingSuccess = currentUser->cancelBooking(seat, sesi);
+
+    if (cancelSeatSuccess && cancelBookingSuccess) {
+        cout << "Booking kursi " << seat << " di sesi " << sesi << " berhasil dibatalkan.\n";
+    } else {
+        cout << "Gagal membatalkan booking.\n";
+    }
+}
