@@ -315,3 +315,95 @@ void cancelBookingMenu(Bioskop& bio, User* currentUser) {
         cout << "Gagal membatalkan booking.\n";
     }
 }
+
+void showMainMenu() {
+    cout << "\n=== APLIKASI BOOKING BIOSKOP ===\n";
+    cout << "1. Login\n";
+    cout << "2. Register\n";
+    cout << "3. Keluar\n";
+    cout << "Pilih menu: ";
+}
+
+void showUserMenu(string username) {
+    cout << "\n=== Menu User: " << username << " ===\n";
+    cout << "1. Booking kursi\n";
+    cout << "2. Batal booking\n";
+    cout << "3. Lihat booking saya\n";
+    cout << "4. Cari kursi kosong (divide & conquer)\n";
+    cout << "5. Logout\n";
+    cout << "Pilih menu: ";
+}
+
+void cariKursiKosongMenu(Bioskop& bio) {
+    cout << "Pilih sesi untuk cari kursi kosong: ";
+    int sesi;
+    cin >> sesi;
+    if (sesi < 1 || sesi > 3) {
+        cout << "Sesi tidak valid!\n";
+        return;
+    }
+    bool found = bio.dcCariSeatKosong(sesi, 0, 4, 0, 5);
+    if (found)
+        cout << "Ada kursi kosong di sesi " << sesi << "!\n";
+    else
+        cout << "Tidak ada kursi kosong di sesi " << sesi << ".\n";
+}
+
+int main() {
+    Bioskop bio;
+    User* currentUser = nullptr;
+    bool running = true;
+
+    while (running) {
+        if (!currentUser) {
+            showMainMenu();
+            int choice;
+            cin >> choice;
+            clearInput();
+
+            switch (choice) {
+                case 1:
+                    login(bio, currentUser);
+                    break;
+                case 2:
+                    registerUser(bio);
+                    break;
+                case 3:
+                    cout << "Terima kasih sudah menggunakan aplikasi ini.\n";
+                    running = false;
+                    break;
+                default:
+                    cout << "Pilihan tidak valid.\n";
+                    break;
+            }
+        } else {
+            showUserMenu(currentUser->getUsername());
+            int choice;
+            cin >> choice;
+            clearInput();
+
+            switch (choice) {
+                case 1:
+                    bookingMenu(bio, currentUser);
+                    break;
+                case 2:
+                    cancelBookingMenu(bio, currentUser);
+                    break;
+                case 3:
+                    currentUser->showBookings();
+                    break;
+                case 4:
+                    cariKursiKosongMenu(bio);
+                    break;
+                case 5:
+                    cout << "Logout berhasil.\n";
+                    currentUser = nullptr;
+                    break;
+                default:
+                    cout << "Pilihan tidak valid.\n";
+                    break;
+            }
+        }
+    }
+    return 0;
+}
