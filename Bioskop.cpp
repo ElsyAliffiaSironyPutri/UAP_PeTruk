@@ -103,5 +103,99 @@ public:
     return u;
   }
 
-    
-        
+  void showSessions() {
+        cout << "Sesi Film yang tersedia:\n";
+        for (auto& s : sessions) {
+            cout << "  Sesi " << s.id << ": " << s.filmName << "\n";
+        }
+    }
+
+    void showSeats(int sessionID) {
+        Session* s = getSession(sessionID);
+        if (!s) {
+            cout << "Sesi tidak ditemukan!\n";
+            return;
+        }
+        cout << "  Kursi (O = kosong, X = booked):\n    1 2 3 4 5 6\n";
+        for (int r = 0; r < 5; r++) {
+            cout << " " << char('A' + r) << " ";
+            for (int c = 0; c < 6; c++) {
+                cout << s->seats[r][c].status << " ";
+            }
+            cout << "\n";
+        }
+    }
+
+    bool validSeat(string seat) {
+        if (seat.length() < 2 || seat.length() > 3) return false;
+        char row = toupper(seat[0]);
+        if (row < 'A' || row > 'E') return false;
+        string colStr = seat.substr(1);
+        if (!all_of(colStr.begin(), colStr.end(), ::isdigit)) return false;
+        int col = stoi(colStr);
+        if (col < 1 || col > 6) return false;
+        return true;
+    }
+
+    bool seatAvailable(int sessionID, string seat) {
+        Session* s = getSession(sessionID);
+        if (!s) return false;
+        int row = toupper(seat[0]) - 'A';
+        int col = stoi(seat.substr(1)) - 1;
+        return s->seats[row][col].status == 'O';
+    }
+
+    bool bookSeat(int sessionID, string seat) {
+        Session* s = getSession(sessionID);
+        if (!s) return false;
+        int row = toupper(seat[0]) - 'A';
+        int col = stoi(seat.substr(1)) - 1;
+        if (s->seats[row][col].status == 'O') {
+            s->seats[row][col].status = 'X';
+            return true;
+        }
+        return false;
+    }
+
+    bool cancelSeat(int sessionID, string seat) {
+        Session* s = getSession(sessionID);
+        if (!s) return false;
+        int row = toupper(seat[0]) - 'A';
+        int col = stoi(seat.substr(1)) - 1;
+        if (s->seats[row][col].status == 'X') {
+            s->seats[row][col].status = 'O';
+            return true;
+        }
+        return false;
+    }
+
+    Session* getSession(int id) {
+        for (auto& s : sessions) {
+            if (s.id == id) return &s;
+        }
+        return nullptr;
+    }
+
+    bool dcCariSeatKosong(int sessionID, int lowRow, int highRow, int lowCol, int highCol) {
+        if (lowRow > highRow || lowCol > highCol) return false;
+
+        if (lowRow == highRow && lowCol == highCol) {
+            Session* s = getSession(sessionID);
+            if (!s) return false;
+            return s->seats[lowRow][lowCol].status == 'O';
+        }
+
+        int midRow = (lowRow + highRow) / 2;
+        int midCol = (lowCol + highCol) / 2;
+
+        return dcCariSeatKosong(sessionID, lowRow, midRow, lowCol, midCol) ||
+               dcCariSeatKosong(sessionID, lowRow, midRow, midCol + 1, highCol) ||
+               dcCariSeatKosong(sessionID, midRow + 1, highRow, lowCol, midCol) ||
+               dcCariSeatKosong(sessionID, midRow + 1, highRow, midCol + 1, highCol);
+    }
+};
+
+void clearInput() {
+    cin.clear();
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+}
